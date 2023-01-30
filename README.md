@@ -1,30 +1,26 @@
-# Svelte Forms
+# Svelte Auth
 
 `npm install @tuentyfaiv/svelte-auth`
 
 ## Examples
+### Instance context
+```svelte
+<!-- +layout.svelte -->
+<script lang="ts">
+  import { authContext } from "@tuentyfaiv/svelte-auth";
+  // configure auth routes and redirection url
 
-- ### Store creation
-  ```typescript=
-  ```
-- ### Input
-  ```svelte
-  ```
+  authContext(["/signin", "/forgot"], "/");
+</script>
+```
+### Protect page
+```svelte
+<!-- +page.svelte -->
+<script lang="ts">
+  import { Auth } from "@tuentyfaiv/svelte-auth";
+</script>
 
-## Imports
-- ### Store 
-  ```typescript
-  import {} from "@tuentyfaiv/svelte-form";
-  ```
-- ### Components
-  ```typescript
-  import {} from "@tuentyfaiv/svelte-form";
-  ```
-- ### Build-in forms
-  ```typescript
-  import {} from "@tuentyfaiv/svelte-form";
-  ```
-- ### Types
-  ```typescript
-  import type {} from "@tuentyfaiv/svelte-form";
-  ```
+<Auth>
+  <!-- ...content -->
+</Auth>
+```
