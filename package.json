@@ -40,7 +40,7 @@
 		"Authorization"
 	],
 	"engines": {
-		"pnpm": "^7.0.0",
+		"pnpm": ">=7.0.0",
 		"node": ">=16.0.0"
 	},
 	"author": "Tonalli López <contact@tuentyfaiv.com>",
