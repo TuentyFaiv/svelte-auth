@@ -11,7 +11,7 @@
   const { show, pathname, isAuth, pages, redirect: to, getstoraged } = $context;
 
   $: {
-    const inAuthPage = $pages.some((page) => page === url.pathname);
+    const inAuthPage = $pages.some((page) => url.pathname.startsWith(page));
 
     if ($isAuth && inAuthPage) {
       $show = false;
