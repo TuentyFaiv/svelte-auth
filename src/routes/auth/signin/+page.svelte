@@ -1,8 +1,10 @@
 <script lang="ts">
-  import { auth, Auth } from "$lib";
+  import { useAuth, Auth } from "$lib";
+
+  const auth = useAuth();
 
   function onSignin() {
-    $auth.authenticate({
+    $auth.authorize({
       token: "some-token",
       user: {
         id: "some-id",

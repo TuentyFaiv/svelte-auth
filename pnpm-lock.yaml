@@ -17,6 +17,9 @@ devDependencies:
   '@sveltejs/package':
     specifier: ^2.2.6
     version: 2.2.6(svelte@4.2.11)(typescript@5.3.3)
+  '@sveltejs/vite-plugin-svelte':
+    specifier: ^3.0.2
+    version: 3.0.2(svelte@4.2.11)(vite@5.1.4)
   '@types/eslint':
     specifier: ^8.56.2
     version: 8.56.2

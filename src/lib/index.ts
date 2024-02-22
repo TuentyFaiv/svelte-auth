@@ -1,4 +1,4 @@
-export type { AuthUser } from "./logic/typing/stores.auth";
+export type { AuthUser } from "./logic/typing/stores.auth.js";
 
-export { auth, authContext } from "./logic/stores";
-export { Auth } from "./ui/hoc";
+export { useAuth, authContext } from "./logic/stores/index.js";
+export { Auth } from "./ui/hoc/index.js";

@@ -7,17 +7,22 @@ export interface AuthStore {
 
 export type AuthContext = Readable<AuthContextStore>;
 
+export interface AuthConfig {
+  pages: string[];
+  redirect: string;
+}
+
 export interface AuthContextStore {
+  update: Update;
   show: Writable<boolean>;
-  isAuth: Writable<boolean>;
-  credentials: Writable<AuthStore>;
+  pages: Writable<string[]>;
   pathname: Writable<string>;
   redirect: Writable<string>;
-  update: Update;
-  pages: Writable<string[]>;
-  authenticate(auth: AuthStore): void;
-  unauthenticate(): void;
-  getstoraged(): Storaged;
+  credentials: Writable<AuthStore>;
+  authorized: Writable<boolean>;
+  authorize(data: AuthStore): void;
+  unauthorize(): void;
+  storaged(): Storaged;
 }
 
 export interface AuthUser {
@@ -28,12 +33,12 @@ export interface AuthUser {
 }
 
 export interface Storaged {
-  auth: boolean;
+  authorized: boolean;
   token: string | null;
   user: string | null;
 }
 
 export interface Update {
-  token(token: string): void;
-  user(data: AuthUser | string): void;
+  token(value: string): void;
+  user(data: AuthUser): void;
 }

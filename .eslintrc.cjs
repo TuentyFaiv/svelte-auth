@@ -6,7 +6,6 @@ module.exports = {
 		"airbnb-typescript/base",
 		"plugin:@typescript-eslint/recommended",
 		"plugin:svelte/recommended",
-		"turbo"
 	],
 	parser: "@typescript-eslint/parser",
 	plugins: ["@typescript-eslint"],

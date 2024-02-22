@@ -1,25 +1,29 @@
 import { browser } from "$app/environment";
-import type { ObjStrCustom } from "../typing/globals.types";
 
-const store: ObjStrCustom<string> = {};
+class Storage {
+  #store: Map<string, string> = new Map();
 
-export const storage = browser ? globalThis.localStorage : {
-  getItem(key: string) {
-    if (store[key]) {
-      return store[key];
+  getItem = (key: string) => {
+    if (this.#store.has(key)) {
+      return this.#store.get(key)!;
     }
+
     return null;
-  },
-  setItem(key: string, value: unknown) {
-    store[key] = `${value}`;
-  },
-  removeItem(key: string) {
-    delete store[key];
-  }
-};
+  };
 
-export const session = globalThis.sessionStorage;
+  setItem = (key: string, value: string) => {
+    this.#store.set(key, value);
+  };
 
-export const { performance } = globalThis;
+  removeItem = (key: string) => {
+    this.#store.delete(key);
+  };
 
-export const { log, warn, error: danger, info } = globalThis.console;
+  clear = () => {
+    this.#store.clear();
+  };
+}
+
+export const storage = browser ? globalThis.localStorage : new Storage();
+
+export const session = browser ? globalThis.sessionStorage : new Storage();

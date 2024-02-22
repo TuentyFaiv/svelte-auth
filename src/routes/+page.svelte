@@ -1,5 +1,7 @@
 <script lang="ts">
-  import { Auth } from "$lib";
+  import { Auth, useAuth } from "$lib";
+
+  const auth = useAuth();
 </script>
 
 <Auth>
@@ -12,4 +14,6 @@
   <p>
     Visit <a href="https://kit.svelte.dev">kit.svelte.dev</a> to read the documentation
   </p>
+
+  <button type="button" on:click={$auth.unauthorize}> Signout </button>
 </Auth>

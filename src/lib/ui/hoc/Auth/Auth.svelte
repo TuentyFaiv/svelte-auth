@@ -1,36 +1,34 @@
 <script lang="ts">
-  import { getContext } from "svelte";
   import { page } from "$app/stores";
   import { goto } from "$app/navigation";
   import { browser } from "$app/environment";
-
-  import type { AuthContext } from "$lib/logic/typing/stores.auth";
+  import { useAuth } from "$lib/logic/stores/index.js";
 
   const { url } = $page;
-  const context = getContext<AuthContext>("auth");
-  const { show, pathname, isAuth, pages, redirect: to, getstoraged } = $context;
+  const auth = useAuth();
+  const { show, pathname, authorized, pages, redirect, storaged } = $auth;
 
   $: {
-    const inAuthPage = $pages.some((page) => page === url.pathname);
+    const unprotected = $pages.some((page) => page === url.pathname);
 
-    if ($isAuth && inAuthPage) {
+    if ($authorized && unprotected) {
       $show = false;
       if (browser) {
-        goto($pathname);
+        goto($pathname, { replaceState: true });
       }
-    } else if ((!$isAuth && inAuthPage) || ($isAuth && !inAuthPage)) {
+    } else if ((!$authorized && unprotected) || ($authorized && !unprotected)) {
       $show = true;
-      $isAuth = getstoraged().auth;
+      $authorized = storaged().authorized;
     } else {
       $show = false;
-      $pathname = url.pathname;
+      $pathname = `${url.pathname}${url.search}`;
       if (browser) {
-        goto($to);
+        goto($redirect, { replaceState: true });
       }
     }
   }
 </script>
 
 {#if $show}
-  <slot {isAuth} />
+  <slot authorized={$authorized} />
 {/if}

@@ -1,6 +1,6 @@
-import { setContext } from "svelte";
-import { readable, writable, get } from "svelte/store";
-import { storage } from "../utils/globals";
+import { getContext, setContext } from "svelte";
+import { readable, writable } from "svelte/store";
+import { storage } from "../utils/globals.js";
 
 // eslint-disable-next-line import/order
 import type { Readable, Writable } from "svelte/store";
@@ -8,149 +8,132 @@ import type {
   AuthStore,
   AuthContext,
   AuthUser,
-  AuthContextStore
-} from "$lib/logic/typing/stores.auth";
-
-import { goto } from "$app/navigation";
+  AuthContextStore,
+  Storaged,
+  AuthConfig,
+} from "../typing/stores.auth.js";
 
 class Auth {
-  #credentials: Writable<AuthStore>;
-  #show: Writable<boolean>;
-  #pathname: Writable<string>;
-  #isAuth: Writable<boolean>;
-  #redirect: Writable<string>;
-  #pages: Writable<string[]>;
-  #avatar: string | null;
+  #show: Writable<boolean> = writable(false);
+  #pages: Writable<string[]> = writable([]);
+  #pathname: Writable<string> = writable("/");
+  #redirect: Writable<string> = writable("/");
+  #credentials: Writable<AuthStore> = writable({ token: null, user: null });
+  #authorized: Writable<boolean> = writable(false);
+
+  #keys = {
+    token: "faivauth_token",
+    user: "faivauth_user",
+  };
 
   public context: Readable<AuthContextStore>;
   static instance: Auth | null = null;
 
-  private constructor() {
-    const storaged = this.#getstoraged();
+  private constructor(config: AuthConfig) {
+    const storaged = this.#storaged();
 
-    this.#pages = writable<string[]>([]);
-    this.#avatar = null;
-    this.#redirect = writable("/");
-    this.#credentials = writable<AuthStore>({
+    this.#pages.set(config.pages);
+    this.#redirect.set(config.redirect);
+    this.#credentials.set({
       token: storaged.token,
-      user: storaged.user ? JSON.parse(storaged.user) : null
+      user: storaged.user ? JSON.parse(storaged.user) : null,
     });
-    this.#show = writable(false);
-    this.#isAuth = writable(storaged.auth);
-    this.#pathname = writable("/");
+    this.#authorized.set(storaged.authorized);
 
     this.context = readable<AuthContextStore>({
-      pages: this.#pages,
-      show: this.#show,
-      isAuth: this.#isAuth,
-      credentials: this.#credentials,
-      pathname: this.#pathname,
-      redirect: this.#redirect,
       update: {
         token: this.#updatetoken,
-        user: this.#updateuser
+        user: this.#updateuser,
       },
-      getstoraged: this.#getstoraged,
-      authenticate: this.#authenticate,
-      unauthenticate: this.#unauthenticate
+      show: this.#show,
+      pages: this.#pages,
+      pathname: this.#pathname,
+      redirect: this.#redirect,
+      credentials: this.#credentials,
+      authorized: this.#authorized,
+      storaged: this.#storaged,
+      authorize: this.#authorize,
+      unauthorize: this.#unauthorize,
     });
   }
 
-  static create() {
+  static create(config: AuthConfig) {
     if (Auth.instance === null) {
-      Auth.instance = new Auth();
+      Auth.instance = new Auth(config);
     }
 
     return Auth.instance;
   }
 
-  public setPages(pages: string[]) {
-    this.#pages.set(pages);
-  }
-
-  public setRedirect(redirect: string) {
-    this.#redirect.set(redirect);
-  }
-
-  public setAvatar(avatar: string | null) {
-    this.#avatar = avatar;
-  }
-
-  // eslint-disable-next-line class-methods-use-this
-  #getstoraged = () => {
-    const token = storage.getItem("token");
-    const user = storage.getItem("user");
-    const auth = !(user === null && token === null);
+  #storaged = (): Storaged => {
+    const token = storage.getItem(this.#keys.token);
+    const user = storage.getItem(this.#keys.user);
+    const authorized = !(user === null && token === null);
 
     return {
-      auth,
+      authorized,
       token,
-      user
+      user,
     };
   };
 
-  // eslint-disable-next-line class-methods-use-this
   #updatetoken = (token: string) => {
-    storage.setItem("token", token);
-  };
-
-  #updateuser = (data: AuthUser | string) => {
     this.#credentials.update((prev) => {
-      const user: AuthUser | null = prev.user ? {
-        ...prev.user,
-        ...(typeof data === "string" ? { avatar: data } : {
-          ...data
-        })
-      } : null;
-
-      if (user) storage.setItem("user", JSON.stringify(user));
+      storage.setItem(this.#keys.token, token);
       return {
         ...prev,
-        user
+        token,
       };
     });
   };
 
-  #authenticate = (auth: AuthStore) => {
+  #updateuser = (data: AuthUser) => {
+    this.#credentials.update((prev) => {
+      const updated: AuthUser = prev.user ? {
+        ...prev.user,
+        ...data,
+      } : data;
+
+      if (updated) storage.setItem(this.#keys.user, JSON.stringify(updated));
+      return {
+        ...prev,
+        user: updated,
+      };
+    });
+  };
+
+  #authorize = (auth: AuthStore) => {
     if (!(auth.token && auth.user)) return;
 
-    const user: AuthUser = {
-      ...auth.user,
-      avatar: auth.user.avatar ?? this.#avatar
-    };
-
-    storage.setItem("token", auth.token);
-    storage.setItem("user", JSON.stringify(user));
+    storage.setItem(this.#keys.token, auth.token);
+    storage.setItem(this.#keys.user, JSON.stringify(auth.user));
 
     this.#credentials.update((prev) => ({
       ...prev,
-      token: auth.token,
-      user
+      ...auth,
     }));
-    this.#isAuth.set(true);
+    this.#authorized.set(true);
   };
 
-  #unauthenticate = () => {
-    storage.removeItem("token");
-    storage.removeItem("user");
+  #unauthorize = () => {
+    storage.removeItem(this.#keys.token);
+    storage.removeItem(this.#keys.user);
 
     this.#credentials.set({
       token: null,
-      user: null
+      user: null,
     });
-    this.#isAuth.set(false);
-
-    goto(get(this.#pathname), { replaceState: true });
+    this.#authorized.set(false);
   };
 }
 
-const instance = Auth.create();
+export function authContext(pages: string[], redirect = "/auth/signin") {
+  const faivauth = Auth.create({ pages, redirect });
+  setContext<AuthContext>("faivauth", faivauth.context);
 
-export const auth = instance.context;
+  return faivauth.context;
+}
 
-export function authContext(pages: string[], redirect = "/auth/signin", avatar: string | null = null) {
-  instance.setPages(pages);
-  instance.setAvatar(avatar);
-  instance.setRedirect(redirect);
-  setContext<AuthContext>("auth", instance.context);
+export function useAuth() {
+  return getContext<AuthContext>("faivauth");
 }
