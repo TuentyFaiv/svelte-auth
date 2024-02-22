@@ -1,7 +1,7 @@
 {
 	"name": "@tuentyfaiv/svelte-auth",
 	"description": "A SvelteKit library to handle authorization.",
-	"version": "0.0.6",
+	"version": "0.1.0",
 	"type": "module",
 	"scripts": {
 		"sync": "svelte-kit sync",
